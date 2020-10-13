@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Weather App</title>
+    <link rel="stylesheet" href="./css/master.css">
+  </head>
+  <body>
+    <section class ="main">
+      <h1>Simple Weather App</h1>
+      <section class="searchbar">
+        <input id="searchbar" type="text" name="cityinput" placeholder="Search for a city">
+        <button id="submit" type="button" name="button">Submit</button>
+      </section>
+      <section class="showResult">
+          <div class="city">
+            <p id="cityName">Paris</p>
+            <h1 id="temp">19 °C</h1>
+            <img id="img"src="./images/rain.gif" alt="weather">
+            <p>Light INTENSITY DRIZZLE</p>
+          </div>
+          <div class="city">
+            <p>Paris</p>
+            <h1>19 °C</h1>
+            <img src="./images/sun.gif" alt="weather">
+            <p>Light INTENSITY DRIZZLE</p>
+          </div>
+      </section>
+    </section>
+    <script src="./scripts/weather.js"></script>
+  </body>
+</html>
