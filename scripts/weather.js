@@ -1,37 +1,104 @@
 
+
+const weather = {
+  temperature:{
+    value:0,
+    unit:"celsius"
+  },
+  description:'Nothing',
+  iconId:'unkown',
+  city:'-',
+  country:'-'
+};
+if (navigator.geolocation) {
+    var location_timeout = setTimeout("geolocFail()", 10000);
+
+    navigator.geolocation.getCurrentPosition(function(position) {
+        clearTimeout(location_timeout);
+
+        var latitude = position.coords.latitude;
+        var longitude = position.coords.longitude;
+
+        getWeather(latitude,longitude);
+      },
+      function(error) {
+        clearTimeout(location_timeout);
+        alert(`Error ${error.code} ${error.message}`);
+        geolocFail();
+      },
+      {maximumAge:10000, timeout:5000, enableHighAccuracy: true});
+} else {
+    geolocFail();
+}
+
+var geolocFail = () =>{
+  alert('Sorry,failed to load leolocation service');
+  return;
+}
+
+const KELVIN = 273;
+const key ="96f70a610a2b066259b75fc8d23eab98"
+function getWeather(lat,lon){
+  let api =`http://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${key}`
+  fetch(api).then(response => {
+	             let data = response.json();
+               return data;
+                })
+              .then(data=>{
+                weather.temperature.value = Math.round(data.main.temp - KELVIN);
+                weather.description = data.weather[0].description;
+                weather.iconId = data.weather[0].icon;
+                weather.city = data.name;
+                weather.country = data.sys.country;
+                return weather;
+              }).then(weather=>{
+                showResult(weather);
+              });
+}
+function getWeatherByCity(city){
+  let api =`http://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${key}`
+
+  function handleErrors(response) {
+    if (!response.ok) {
+        throw Error(response.statusText);
+    }
+    return response;
+}
+  fetch(api).then(handleErrors).then(response =>{
+      let data = response.json();
+      return data;
+  })
+  .then(data =>{
+    weather.temperature.value = Math.round(data.main.temp - KELVIN);
+    weather.description = data.weather[0].description;
+    weather.iconId = data.weather[0].icon;
+    weather.city = data.name;
+    weather.country = data.sys.country;
+    return weather;
+  }).then(weather=>{
+    showResult(weather);
+  }).catch(error => {
+    alert(error);
+  })
+}
+const submit = document.getElementById("submit");
+submit.addEventListener("click",chechInput);
 var temperature = Math.floor(Math.random()*26)+10;
 
-// var city = ()=>{
-//   var cities =["paris", "Sydney","Shanghai","NewYork"];
-//   let i = Math.floor((Math.random()*10))%cities.length;
-//   return cities[i];
-// }
-
-var cities =["paris", "sydney","shanghai","newyork"];
 const searchbar = document.getElementById("searchbar");
 
 function chechInput(){
-
   let input = searchbar.value;
   if(!input) {
     alert("Please enter the city name you want to check!")
     return;
   }
-  if(!cities.includes(input.toLowerCase())){
-    alert(`Sorry, we don't have the data of ${input}. Please try other cities.`)
-    return;
-  }
   else{
-    temperature = Math.floor(Math.random()*26)+10;
-    console.log(input);
-    showResult(temperature,input);
+    getWeatherByCity(input);
   }
 }
-//var desc = getDesc(temp);
-const submit = document.getElementById("submit");
-submit.addEventListener("click",chechInput);
 
-var showResult = (temperature,city)=>{
+var showResult = (weather)=>{
   if(!document.getElementById) return false;
   if(!document.getElementById("img")) return false;
   if(!document.getElementById("cityName")) return false;
@@ -43,44 +110,21 @@ var showResult = (temperature,city)=>{
   var temp = document.getElementById("temp");
   var desc = img.nextSibling.nextSibling;
 
-  if(temperature > 30){
-    cityName.innerHTML = city;
-    temp.innerHTML = temperature+"°C";
-    img.setAttribute("src","./images/sun.gif");
-    desc.innerHTML = "So Hot!";
-    return "So hot.";
-  }
-  else if(temperature>25){
-    cityName.innerHTML = city;
-    temp.innerHTML = temperature+"°C";
-    img.setAttribute("src","./images/cloud1.gif");
-    desc.innerHTML ="The weather is nice!";
-    return "The weather is nice!";
-  }
-  else if(temperature>20){
-    cityName.innerHTML = city;
-    temp.innerHTML = temperature+"°C";
-    img.setAttribute("src","./images/cloud.gif");
-    desc.innerHTML ="Cloud";
-    return "Cloud";
-  }
-  else if(temperature>15){
-    cityName.innerHTML = city;
-    temp.innerHTML = temperature+"°C";
-    img.setAttribute("src","./images/thunder.gif");
-    desc.innerHTML ="Thunder";
-    return "thunder";
-  }
-  else{
-    cityName.innerHTML = city;
-    temp.innerHTML = temperature+"°C";
-    img.setAttribute("src","./images/rain.gif");
-    desc.innerHTML ="Rain";
-    return "rain";
-  }
-}
-// var data = [
-//   {city:city(),temp:temperature,desc:showResult(temperature)}
-// ]
+  temp.addEventListener('click',()=>{
 
-//console.log(data);
+    if(weather.temperature.unit ==='celsius'){
+      let fahrenheit = Math.floor(weather.temperature.value *9/5 +32);
+      temp.innerHTML = fahrenheit + "°F";
+      weather.temperature.unit = 'fahrenheit';
+    }
+    else{
+      temp.innerHTML = weather.temperature.value +"°C";
+      weather.temperature.unit = "celsius";
+    }
+  })
+
+  cityName.innerHTML = weather.city+','+weather.country;
+  temp.innerHTML = weather.temperature.value+"°C";
+  img.setAttribute("src",`./images/${weather.iconId}.png`);
+  desc.innerHTML = weather.description;
+}
